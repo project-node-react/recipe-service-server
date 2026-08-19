@@ -26,7 +26,7 @@ export const LoginSchema = registry.register(
 export const UserSchema = registry.register(
   "User",
   z.object({
-    id: z.number().int().positive().openapi({ example: 1 }),
+    id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
     name: z.string().openapi({ example: "ivan_petrenko" }),
     email: z.email().openapi({ example: "ivan@example.com" }),
     avatar: z.string().nullable().optional().openapi({
