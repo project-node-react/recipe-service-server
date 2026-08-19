@@ -30,3 +30,9 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  image String 
+}

@@ -1,0 +1,2 @@
+### 1 Отримання списку категорій
+GET http://localhost:3000/api/categories
