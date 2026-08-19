@@ -1,0 +1,44 @@
+import type { Request, Response } from "express";
+import prisma from "../../prisma/client.ts";
+import type { UserIdParams } from "../validators/user.validator.ts";
+import logger from "../logger.ts";
+
+export const getUserProfile = async (
+  req: Request<UserIdParams>,
+  res: Response,
+) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    logger.info(
+      { userId: user.id, name: user.name },
+      "User profile fetched",
+    );
+
+    return res.status(200).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar ?? null,
+      recipesCount: 0,
+      followersCount: 0,
+      createdAt: user.createdAt.toISOString(),
+    });
+  } catch (error) {
+    logger.error({ error }, "Failed to fetch user profile");
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
