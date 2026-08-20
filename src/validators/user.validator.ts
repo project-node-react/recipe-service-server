@@ -117,3 +117,39 @@ registry.registerPath({
                 },
         },
 });
+export const FollowingResponseSchema = registry.register(
+        "FollowingResponse",
+        z.object({
+                following: z.array(
+                        z.object({
+                                id: z.string(),
+                                name: z.string(),
+                                avatar: z.string().nullable(),
+                        }),
+                ),
+        }),
+);
+
+export type FollowingResponse = z.infer<typeof FollowingResponseSchema>;
+
+registry.registerPath({
+        method: "get",
+        path: "/api/users/following",
+        tags: ["Users"],
+        summary: "Get users followed by authenticated user",
+        description: "Get users that the authenticated user follows",
+        security: [{ bearerAuth: [] }],
+        responses: {
+                200: {
+                        description: "List of followed users",
+                        content: {
+                                "application/json": {
+                                        schema: FollowingResponseSchema,
+                                },
+                        },
+                },
+                401: {
+                        description: "Authentication required",
+                },
+        },
+});

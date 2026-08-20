@@ -98,6 +98,7 @@ export const updateUserAvatar = async (
     });
   }
 };
+
 export const getUserFollowers = async (
   req: Request<UserIdParams>,
   res: Response,
@@ -138,6 +139,49 @@ export const getUserFollowers = async (
     logger.error(
       { error },
       "Failed to fetch user followers",
+    );
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const getUserFollowing = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const userId = req.user?.sub;
+
+    if (!userId || typeof userId !== "string") {
+      return res.status(401).json({
+        error: "Authentication required",
+      });
+    }
+
+    const following = await prisma.follow.findMany({
+      where: {
+        followerId: userId,
+      },
+      include: {
+        following: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      following: following.map(({ following }) => following),
+    });
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch user following",
     );
 
     return res.status(500).json({

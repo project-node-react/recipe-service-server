@@ -3,6 +3,7 @@ import {
   getUserProfile,
   updateUserAvatar,
   getUserFollowers,
+  getUserFollowing,
 } from "../controllers/user.controller.ts";
 import { UserIdParamsSchema } from "../validators/user.validator.ts";
 import { validateParams } from "../middleware/validate.ts";
@@ -16,6 +17,12 @@ router.get(
   authenticate,
   validateParams(UserIdParamsSchema),
   getUserFollowers,
+);
+
+router.get(
+  "/following",
+  authenticate,
+  getUserFollowing,
 );
 
 router.get(
