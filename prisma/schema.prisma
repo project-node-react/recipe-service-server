@@ -32,7 +32,8 @@ model RefreshToken {
 }
 
 model Category {
-  id    String @id @default(uuid())
-  name  String @unique
-  image String 
+  id    String  @id @default(cuid(2))
+  name  String
+  image String? 
 }
+

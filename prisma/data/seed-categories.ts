@@ -1,5 +1,5 @@
 import fs from 'fs';
-import prisma from './prisma/client.ts';
+import prisma from '../client.ts';
 
 const csvData = fs.readFileSync('prisma/data/2_categories.csv', 'utf-8');
 
