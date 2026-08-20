@@ -1,18 +1,23 @@
-import { z } from "zod";
 import { Router } from "express";
-import { getUserProfile } from "../controllers/user.controller.ts";
-import {
-  UserIdParamsSchema,
-} from "../validators/user.validator.ts";
+import { getUserProfile, updateUserAvatar } from "../controllers/user.controller.ts";
+import { UserIdParamsSchema } from "../validators/user.validator.ts";
 import { validateParams } from "../middleware/validate.ts";
+import authenticate from "../middleware/authenticate.ts";
+import { upload } from "../middleware/upload.ts";
 
 const router = Router();
-
 
 router.get(
   "/:userId",
   validateParams(UserIdParamsSchema),
   getUserProfile,
+);
+
+router.patch(
+  "/avatar",
+  authenticate,
+  upload.single("avatar"),
+  updateUserAvatar,
 );
 
 export default router;

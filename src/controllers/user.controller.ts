@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import prisma from "../../prisma/client.ts";
 import type { UserIdParams } from "../validators/user.validator.ts";
 import logger from "../logger.ts";
+import { uploadToCloudinary } from "../services/cloudinary.ts";
 
 export const getUserProfile = async (
   req: Request<UserIdParams>,
@@ -36,6 +37,61 @@ export const getUserProfile = async (
     });
   } catch (error) {
     logger.error({ error }, "Failed to fetch user profile");
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+export const updateUserAvatar = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const userId = req.user?.sub;
+
+    if (!userId || typeof userId !== "string") {
+      return res.status(401).json({
+        error: "Authentication required",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        error: "Avatar file is required",
+      });
+    }
+
+    const avatarUrl = await uploadToCloudinary(
+      req.file.path,
+      "avatars",
+    );
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        avatar: avatarUrl,
+      },
+      select: {
+        id: true,
+        avatar: true,
+      },
+    });
+
+    logger.info(
+      { userId: user.id },
+      "User avatar updated",
+    );
+
+    return res.status(200).json({
+      avatar: user.avatar,
+    });
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to update user avatar",
+    );
 
     return res.status(500).json({
       error: "Internal server error",
