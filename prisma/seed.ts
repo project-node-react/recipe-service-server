@@ -1,13 +1,13 @@
 /* eslint-disable no-console */
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { parse } from 'csv-parse/sync';
-import bcrypt from 'bcrypt';
-import prisma from './client.ts';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { parse } from "csv-parse/sync";
+import bcrypt from "bcrypt";
+import prisma from "./client.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, 'seed-data');
+const DATA_DIR = path.join(__dirname, "seed-data");
 
 interface CategoryRow {
   id: string;
@@ -65,7 +65,7 @@ interface TestimonialRow {
  */
 function readCsv<T>(fileName: string): T[] {
   const filePath = path.join(DATA_DIR, fileName);
-  const raw = fs.readFileSync(filePath, 'utf-8').replace(/^\uFEFF/, '');
+  const raw = fs.readFileSync(filePath, "utf-8").replace(/^\uFEFF/, "");
   return parse(raw, {
     columns: true,
     skip_empty_lines: true,
@@ -74,7 +74,7 @@ function readCsv<T>(fileName: string): T[] {
 }
 
 async function seedCategories(): Promise<void> {
-  const rows = readCsv<CategoryRow>('categories.csv');
+  const rows = readCsv<CategoryRow>("categories.csv");
   for (const row of rows) {
     await prisma.category.upsert({
       where: { id: row.id },
@@ -86,7 +86,7 @@ async function seedCategories(): Promise<void> {
 }
 
 async function seedAreas(): Promise<void> {
-  const rows = readCsv<AreaRow>('areas.csv');
+  const rows = readCsv<AreaRow>("areas.csv");
   for (const row of rows) {
     await prisma.area.upsert({
       where: { id: row.id },
@@ -98,11 +98,15 @@ async function seedAreas(): Promise<void> {
 }
 
 async function seedIngredients(): Promise<void> {
-  const rows = readCsv<IngredientRow>('ingredients.csv');
+  const rows = readCsv<IngredientRow>("ingredients.csv");
   for (const row of rows) {
     await prisma.ingredient.upsert({
       where: { id: row.id },
-      update: { name: row.name, description: row.description || null, img: row.img || null },
+      update: {
+        name: row.name,
+        description: row.description || null,
+        img: row.img || null,
+      },
       create: {
         id: row.id,
         name: row.name,
@@ -115,7 +119,7 @@ async function seedIngredients(): Promise<void> {
 }
 
 async function seedUsers(): Promise<void> {
-  const rows = readCsv<UserRow>('users_for_import.csv');
+  const rows = readCsv<UserRow>("users_for_import.csv");
   for (const row of rows) {
     const passwordHash = await bcrypt.hash(row.password, 10);
     await prisma.user.upsert({
@@ -124,14 +128,14 @@ async function seedUsers(): Promise<void> {
         name: row.name,
         email: row.email,
         password: passwordHash,
-        avatarURL: row.avatar || null,
+        avatar: row.avatar || null,
       },
       create: {
         id: row.id,
         name: row.name,
         email: row.email,
         password: passwordHash,
-        avatarURL: row.avatar || null,
+        avatar: row.avatar || null,
       },
     });
   }
@@ -139,7 +143,7 @@ async function seedUsers(): Promise<void> {
 }
 
 async function seedRecipes(): Promise<void> {
-  const rows = readCsv<RecipeRow>('recipes_for_import.csv');
+  const rows = readCsv<RecipeRow>("recipes_for_import.csv");
   for (const row of rows) {
     const cookingTime = parseInt(row.cookingTime, 10) || 0;
     await prisma.recipe.upsert({
@@ -173,7 +177,9 @@ async function seedRecipes(): Promise<void> {
 }
 
 async function seedRecipeIngredients(): Promise<void> {
-  const rows = readCsv<RecipeIngredientRow>('recipe_ingredients_for_import.csv');
+  const rows = readCsv<RecipeIngredientRow>(
+    "recipe_ingredients_for_import.csv",
+  );
   const data = rows.map((row) => ({
     recipeId: row.recipeId,
     ingredientId: row.ingredientId,
@@ -183,23 +189,29 @@ async function seedRecipeIngredients(): Promise<void> {
     data,
     skipDuplicates: true,
   });
-  console.log(`✔ recipe_ingredients: вставлено ${result.count} из ${rows.length}`);
+  console.log(
+    `✔ recipe_ingredients: вставлено ${result.count} из ${rows.length}`,
+  );
 }
 
 async function seedTestimonials(): Promise<void> {
-  const rows = readCsv<TestimonialRow>('testimonials_for_import.csv');
+  const rows = readCsv<TestimonialRow>("testimonials_for_import.csv");
   for (const row of rows) {
     await prisma.testimonial.upsert({
       where: { id: row.id },
       update: { ownerId: row.ownerId, testimonial: row.testimonial },
-      create: { id: row.id, ownerId: row.ownerId, testimonial: row.testimonial },
+      create: {
+        id: row.id,
+        ownerId: row.ownerId,
+        testimonial: row.testimonial,
+      },
     });
   }
   console.log(`✔ testimonials: ${rows.length}`);
 }
 
 async function main(): Promise<void> {
-  console.log('Сидирование базы данных запущено...');
+  console.log("Сидирование базы данных запущено...");
   await seedUsers();
   await seedCategories();
   await seedAreas();
@@ -207,12 +219,12 @@ async function main(): Promise<void> {
   await seedRecipes();
   await seedRecipeIngredients();
   await seedTestimonials();
-  console.log('Готово ✅');
+  console.log("Готово ✅");
 }
 
 main()
   .catch((err) => {
-    console.error('Ошибка сидирования:', err);
+    console.error("Ошибка сидирования:", err);
     process.exitCode = 1;
   })
   .finally(async () => {
