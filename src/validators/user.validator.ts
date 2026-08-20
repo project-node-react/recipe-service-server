@@ -190,3 +190,34 @@ registry.registerPath({
                 },
         },
 });
+registry.registerPath({
+        method: "delete",
+        path: "/api/users/{userId}/follow",
+        tags: ["Users"],
+        summary: "Unfollow a user",
+        description: "Remove a user from the authenticated user's following list",
+        security: [{ bearerAuth: [] }],
+        request: {
+                params: UserIdParamsSchema,
+        },
+        responses: {
+                200: {
+                        description: "User unfollowed successfully",
+                        content: {
+                                "application/json": {
+                                        schema: z.object({
+                                                message: z.string().openapi({
+                                                        example: "User unfollowed successfully",
+                                                }),
+                                        }),
+                                },
+                        },
+                },
+                401: {
+                        description: "Authentication required",
+                },
+                404: {
+                        description: "You are not following this user",
+                },
+        },
+});

@@ -262,3 +262,60 @@ export const followUser = async (
     });
   }
 };
+export const unfollowUser = async (
+  req: Request<UserIdParams>,
+  res: Response,
+) => {
+  try {
+    const followerId = req.user?.sub;
+    const { userId: followingId } = req.params;
+
+    if (!followerId || typeof followerId !== "string") {
+      return res.status(401).json({
+        error: "Authentication required",
+      });
+    }
+
+    const existingFollow = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    if (!existingFollow) {
+      return res.status(404).json({
+        error: "You are not following this user",
+      });
+    }
+
+    await prisma.follow.delete({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    logger.info(
+      { followerId, followingId },
+      "User unfollowed successfully",
+    );
+
+    return res.status(200).json({
+      message: "User unfollowed successfully",
+    });
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to unfollow user",
+    );
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};

@@ -5,6 +5,7 @@ import {
   getUserFollowers,
   getUserFollowing,
   followUser,
+  unfollowUser,
 } from "../controllers/user.controller.ts";
 import { UserIdParamsSchema } from "../validators/user.validator.ts";
 import { validateParams } from "../middleware/validate.ts";
@@ -18,6 +19,13 @@ router.get(
   authenticate,
   validateParams(UserIdParamsSchema),
   getUserFollowers,
+);
+
+router.delete(
+  "/:userId/follow",
+  authenticate,
+  validateParams(UserIdParamsSchema),
+  unfollowUser,
 );
 
 router.get(
