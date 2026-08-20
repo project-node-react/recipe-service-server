@@ -75,3 +75,45 @@ registry.registerPath({
 		},
 	},
 });
+export const FollowersResponseSchema = registry.register(
+        "FollowersResponse",
+        z.object({
+                followers: z.array(
+                        z.object({
+                                id: z.string(),
+                                name: z.string(),
+                                avatar: z.string().nullable(),
+                        }),
+                ),
+        }),
+);
+
+export type FollowersResponse = z.infer<typeof FollowersResponseSchema>;
+
+registry.registerPath({
+        method: "get",
+        path: "/api/users/{userId}/followers",
+        tags: ["Users"],
+        summary: "Get user's followers",
+        description: "Get users who follow the specified user",
+        security: [{ bearerAuth: [] }],
+        request: {
+                params: UserIdParamsSchema,
+        },
+        responses: {
+                200: {
+                        description: "List of followers",
+                        content: {
+                                "application/json": {
+                                        schema: FollowersResponseSchema,
+                                },
+                        },
+                },
+                401: {
+                        description: "Authentication required",
+                },
+                404: {
+                        description: "User not found",
+                },
+        },
+});

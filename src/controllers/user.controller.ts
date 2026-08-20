@@ -98,3 +98,50 @@ export const updateUserAvatar = async (
     });
   }
 };
+export const getUserFollowers = async (
+  req: Request<UserIdParams>,
+  res: Response,
+) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const followers = await prisma.follow.findMany({
+      where: {
+        followingId: userId,
+      },
+      include: {
+        follower: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    return res.status(200).json({
+      followers: followers.map(({ follower }) => follower),
+    });
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to fetch user followers",
+    );
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
