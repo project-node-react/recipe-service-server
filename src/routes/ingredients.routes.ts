@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import "../validators/categories.validator.ts";
+import "../validators/ingredients.validator.ts";
 import { getIngredients } from '../controllers/ingredients.controller.ts';
 
 const router = Router();

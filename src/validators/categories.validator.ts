@@ -6,7 +6,6 @@ export const CategorySchema = registry.register(
   z.object({
     id: z.string(),
     name: z.string(),
-    image: z.string().nullable(),
   })
 );
 

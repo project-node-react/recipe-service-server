@@ -6,8 +6,8 @@ export const IngredientSchema = registry.register(
   z.object({
     id: z.string(),
     name: z.string(),
-    description: z.string(),
-    img: z.string().nullable(), 
+    description: z.string().nullable(),
+    img: z.string().nullable(),
   })
 );
 

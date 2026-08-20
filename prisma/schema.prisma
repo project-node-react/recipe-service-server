@@ -44,9 +44,9 @@ model RefreshToken {
 }
 
 model Category {
-   id    String  @id @default(cuid(2))
-  name  String
-  image String? 
+  id      String   @id
+  name    String   @unique
+  recipes Recipe[]
 
   @@map("categories")
 }
@@ -60,10 +60,12 @@ model Area {
 }
 
 model Ingredient {
-  id          String  @id @default(cuid(2))
+  id          String @id
   name        String
-  description String
-  img         String? 
+  description String?
+  img         String?
+
+  recipes RecipeIngredient[]
 
   @@map("ingredients")
 }
@@ -140,4 +142,3 @@ model Testimonial {
 
   @@map("testimonials")
 }
-
