@@ -153,3 +153,40 @@ registry.registerPath({
                 },
         },
 });
+registry.registerPath({
+        method: "post",
+        path: "/api/users/{userId}/follow",
+        tags: ["Users"],
+        summary: "Follow a user",
+        description: "Add a user to the authenticated user's following list",
+        security: [{ bearerAuth: [] }],
+        request: {
+                params: UserIdParamsSchema,
+        },
+        responses: {
+                201: {
+                        description: "User followed successfully",
+                        content: {
+                                "application/json": {
+                                        schema: z.object({
+                                                message: z.string().openapi({
+                                                        example: "User followed successfully",
+                                                }),
+                                        }),
+                                },
+                        },
+                },
+                400: {
+                        description: "Cannot follow yourself",
+                },
+                401: {
+                        description: "Authentication required",
+                },
+                404: {
+                        description: "User not found",
+                },
+                409: {
+                        description: "Already following this user",
+                },
+        },
+});

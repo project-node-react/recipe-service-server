@@ -189,3 +189,76 @@ export const getUserFollowing = async (
     });
   }
 };
+
+export const followUser = async (
+  req: Request<UserIdParams>,
+  res: Response,
+) => {
+  try {
+    const followerId = req.user?.sub;
+    const { userId: followingId } = req.params;
+
+    if (!followerId || typeof followerId !== "string") {
+      return res.status(401).json({
+        error: "Authentication required",
+      });
+    }
+
+    if (followerId === followingId) {
+      return res.status(400).json({
+        error: "You cannot follow yourself",
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: followingId },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    const existingFollow = await prisma.follow.findUnique({
+      where: {
+        followerId_followingId: {
+          followerId,
+          followingId,
+        },
+      },
+    });
+
+    if (existingFollow) {
+      return res.status(409).json({
+        error: "Already following this user",
+      });
+    }
+
+    await prisma.follow.create({
+      data: {
+        followerId,
+        followingId,
+      },
+    });
+
+    logger.info(
+      { followerId, followingId },
+      "User followed successfully",
+    );
+
+    return res.status(201).json({
+      message: "User followed successfully",
+    });
+  } catch (error) {
+    logger.error(
+      { error },
+      "Failed to follow user",
+    );
+
+    return res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
