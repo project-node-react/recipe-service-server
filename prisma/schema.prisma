@@ -37,3 +37,9 @@ model Category {
   image String? 
 }
 
+model Ingredient {
+  id          String  @id @default(cuid(2))
+  name        String
+  description String
+  img         String? 
+}
