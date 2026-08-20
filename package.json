@@ -11,7 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:migrate:test": "tsx scripts/migrate-test.ts",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "seed": "tsx prisma/seed.ts"
   },
   "keywords": [],
   "author": "Mohara88s",
@@ -25,7 +26,7 @@
     "cloudinary": "^2.10.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
-    "csv-parser": "^3.2.1",
+    "csv-parse": "^7.0.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.6.2",
     "helmet": "^8.3.0",
