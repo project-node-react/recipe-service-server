@@ -18,7 +18,7 @@ const cardSelect = {
   cookingTime: true,
   category: { select: { id: true, name: true } },
   area: { select: { id: true, name: true } },
-  owner: { select: { id: true, name: true, avatarURL: true } },
+  owner: { select: { id: true, name: true, avatar: true } },
 } as const;
 
 function buildPagination(page: number, limit: number, totalItems: number, data: unknown[]) {
@@ -74,7 +74,7 @@ export const getRecipeById = async (req: Request<IdParams>, res: Response) => {
     include: {
       category: { select: { id: true, name: true } },
       area: { select: { id: true, name: true } },
-      owner: { select: { id: true, name: true, avatarURL: true } },
+      owner: { select: { id: true, name: true, avatar: true } },
       ingredients: {
         select: { measure: true, ingredient: { select: { id: true, name: true, img: true } } },
       },

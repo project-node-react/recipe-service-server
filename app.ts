@@ -4,6 +4,8 @@ import swaggerUi from "swagger-ui-express";
 import cookieParser from "cookie-parser";
 
 import { generateOpenApiDocument } from "./src/openapi.ts";
+import "./src/validators/area.validator.ts";
+import "./src/validators/testimonial.validator.ts";
 
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";

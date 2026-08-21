@@ -6,7 +6,16 @@ export const getAllTestimonials = async () => {
       id: 'asc',
     },
     include: {
-      owner: true,
+      owner: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
     },
   });
 };

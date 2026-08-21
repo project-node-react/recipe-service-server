@@ -222,3 +222,53 @@ registry.registerPath({
 		},
 	},
 });
+
+registry.registerPath({
+	method: "patch",
+	path: "/api/users/avatar",
+	tags: ["Users"],
+	summary: "Update the authenticated user's avatar",
+	description: "Multipart form data with a single `avatar` image file.",
+	security: [{ bearerAuth: [] }],
+	request: {
+		body: {
+			content: {
+				"multipart/form-data": {
+					schema: z.object({
+						avatar: z.string().openapi({
+							type: "string",
+							format: "binary",
+							description: "Avatar image file",
+						}),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Avatar updated successfully",
+			content: {
+				"application/json": {
+					schema: z.object({
+						avatar: z.string().nullable().openapi({
+							example:
+								"https://res.cloudinary.com/dzxdn99qc/image/upload/v1786188885/avatars/nnzjc2gtqrawrmifzv4w.jpg",
+						}),
+					}),
+				},
+			},
+		},
+		400: {
+			description: "Avatar file is required",
+			content: {
+				"application/json": {
+					schema: z.object({ error: z.string() }),
+				},
+			},
+		},
+		401: {
+			description: "Authentication required",
+		},
+	},
+});
