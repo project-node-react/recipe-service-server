@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import { generateOpenApiDocument } from "./src/openapi.ts";
 
 import authRouter from "./src/routes/auth.routes.ts";
+import userRouter from "./src/routes/user.routes.ts";
 
 import categoriesRoutes from "./src/routes/categories.routes.ts";
 
@@ -54,6 +55,7 @@ const openApiDocument = generateOpenApiDocument();
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/users", userRouter);
 
 // Add the categories routes
 app.use('/api/categories', categoriesRoutes);

@@ -10,7 +10,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// Models here
 model User {
   id        String   @id @default(cuid(2))
   name      String   @unique
@@ -18,8 +17,19 @@ model User {
   password  String
   avatar    String?
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  recipes       Recipe[]       @relation("OwnerRecipes")
+  favorites     Favorite[]
+  testimonials  Testimonial[]
   refreshTokens RefreshToken[]
+
+  // люди, которые подписаны на меня (я — "following" для них)
+  followers Follow[] @relation("Following")
+  // люди, на которых подписан я
+  following Follow[] @relation("Follower")
+
+  @@map("users")
 }
 
 model RefreshToken {
@@ -29,6 +39,108 @@ model RefreshToken {
   token     String
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model Category {
+  id      String   @id
+  name    String   @unique
+  recipes Recipe[]
+
+  @@map("categories")
+}
+
+model Area {
+  id      String   @id
+  name    String   @unique
+  recipes Recipe[]
+
+  @@map("areas")
+}
+
+model Ingredient {
+  id          String @id
+  name        String
+  description String?
+  img         String?
+
+  recipes RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  title        String
+  description  String?
+  instructions String
+  thumb        String?
+  preview      String?
+  cookingTime  Int
+  categoryId   String
+  areaId       String
+  ownerId      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id])
+  area     Area     @relation(fields: [areaId], references: [id])
+  owner    User     @relation("OwnerRecipes", fields: [ownerId], references: [id])
+
+  ingredients RecipeIngredient[]
+  favoritedBy Favorite[]
+
+  @@index([categoryId])
+  @@index([areaId])
+  @@index([ownerId])
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  recipeId     String
+  ingredientId String
+  measure      String
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@id([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model Favorite {
+  userId    String
+  recipeId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, recipeId])
+  @@map("favorites")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Follower", fields: [followerId], references: [id])
+  following User @relation("Following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@map("follows")
+}
+
+model Testimonial {
+  id          String @id
+  ownerId     String
+  testimonial String
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  @@map("testimonials")
 }
 
 model Category {
