@@ -6,7 +6,8 @@ import cookieParser from "cookie-parser";
 import { generateOpenApiDocument } from "./src/openapi.ts";
 import "./src/validators/area.validator.ts";
 import "./src/validators/testimonial.validator.ts";
-
+import areasRoutes from "./src/routes/area.routes.ts";
+import testimonialRoutes from "./src/routes/testimonial.routes.ts";
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";
 import recipesRouter from "./src/routes/recipe.routes.ts";
@@ -62,6 +63,9 @@ app.use("/api/users", userRouter);
 
 app.use("/api/recipes", recipesRouter);
 
+app.use("/api/areas", areasRoutes);
+
+app.use("/api/testimonials", testimonialRoutes);
 // Add the categories routes
 app.use("/api/categories", categoriesRoutes);
 
