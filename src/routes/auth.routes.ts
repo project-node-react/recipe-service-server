@@ -6,6 +6,7 @@ import {
   logout,
 } from "../controllers/auth.controller.ts";
 import { validateBody } from "../middleware/validate.ts";
+import authenticate from "../middleware/authenticate.ts";
 import { RegisterSchema, LoginSchema } from "../validators/auth.validator.ts";
 
 const router = Router();
@@ -13,6 +14,6 @@ const router = Router();
 router.post("/register", validateBody(RegisterSchema), register);
 router.post("/login", validateBody(LoginSchema), login);
 router.post("/refresh", refresh);
-router.post("/logout", logout);
+router.post("/logout", authenticate, logout);
 
 export default router;
