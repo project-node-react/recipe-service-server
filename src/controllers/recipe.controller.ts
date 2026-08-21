@@ -155,7 +155,7 @@ export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: 
       cookingTime: time,
       categoryId: category,
       areaId: area,
-      ownerId: req.user!.id,
+      ownerId: req.user!.sub!,
       ingredients: { create: ingredients.map((i) => ({ ingredientId: i.id, measure: i.measure })) },
     },
     include: {
