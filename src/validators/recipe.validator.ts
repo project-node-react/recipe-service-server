@@ -2,8 +2,6 @@ import { z } from 'zod';
 import { registry } from '../openapi.ts';
 import { PaginationQuerySchema, IdParamsSchema } from './common.validator.ts';
 
-// --- query params ---
-
 export const RecipesQuerySchema = PaginationQuerySchema.extend({
   category: z.string().trim().optional().openapi({
     example: '6462a6cd4c3d0ddd28897f8a',
@@ -35,7 +33,7 @@ const IngredientInputSchema = z.object({
 // multipart/form-data приходит как строки, поэтому ingredients ожидаем как
 // JSON-строку вида '[{"id":"...","measure":"..."}]' и парсим её через preprocess.
 export const CreateRecipeSchema = registry.register(
-  'CreateRecipe',
+  "CreateRecipe",
   z.object({
     title: z.string().trim().min(1).max(200).openapi({ example: 'Borscht' }),
     description: z.string().trim().max(500).optional().openapi({
@@ -58,7 +56,7 @@ export const CreateRecipeSchema = registry.register(
     }),
     ingredients: z.preprocess(
       (val) => {
-        if (typeof val === 'string') {
+        if (typeof val === "string") {
           try {
             return JSON.parse(val);
           } catch {
@@ -244,6 +242,7 @@ registry.registerPath({
       content: { 'application/json': { schema: RecipeDetailSchema } },
     },
     404: { description: 'Recipe not found' },
+
   },
 });
 
@@ -255,8 +254,85 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: {
     body: {
-      content: { 'multipart/form-data': { schema: CreateRecipeSchema } },
+      content: { "multipart/form-data": { schema: CreateRecipeSchema } },
     },
+  },
+  responses: {
+    201: { description: "Recipe created" },
+    400: {
+      description: "Unknown category/area/ingredient id",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+    401: {
+      description: "Authentication required",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+    422: { description: "Validation error" },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/recipes/{id}",
+  tags: ["Recipes"],
+  summary: "Delete own recipe",
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
+    }),
+  },
+  responses: {
+    204: { description: "Recipe deleted" },
+    401: {
+      description: "Authentication required",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+    403: {
+      description: "You can only delete your own recipes",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+    404: {
+      description: "Recipe not found",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "post",
+  path: "/api/recipes/{id}/favorite",
+  tags: ["Recipes"],
+  summary: "Add a recipe to favorites",
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
+    }),
+  },
+  responses: {
+    204: { description: "Recipe added to favorites (idempotent)" },
+    401: {
+      description: "Authentication required",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+    404: {
+      description: "Recipe not found",
+      content: { "application/json": { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: "delete",
+  path: "/api/recipes/{id}/favorite",
+  tags: ["Recipes"],
+  summary: "Remove a recipe from favorites",
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({
+      id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
+    }),
   },
   responses: {
     201: { description: 'Recipe created' },
@@ -301,5 +377,6 @@ registry.registerPath({
   request: { params: IdParamsSchema },
   responses: {
     204: { description: 'Removed from favorites' },
+
   },
 });
