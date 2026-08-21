@@ -142,9 +142,3 @@ model Testimonial {
 
   @@map("testimonials")
 }
-
-model Category {
-  id    String @id @default(uuid())
-  name  String @unique
-  image String 
-}
