@@ -4,15 +4,26 @@ import type { UserIdParams } from "../validators/user.validator.ts";
 import logger from "../logger.ts";
 import { uploadToCloudinary } from "../services/cloudinary.ts";
 
-export const getUserProfile = async (
-  req: Request<UserIdParams>,
-  res: Response,
-) => {
+export const getCurrentUser = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user!.sub as string;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        _count: {
+          select: {
+            recipes: true,
+            favorites: true,
+            followers: true,
+            following: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -23,7 +34,7 @@ export const getUserProfile = async (
 
     logger.info(
       { userId: user.id, name: user.name },
-      "User profile fetched",
+      "Current user info fetched",
     );
 
     return res.status(200).json({
@@ -31,12 +42,13 @@ export const getUserProfile = async (
       name: user.name,
       email: user.email,
       avatar: user.avatar ?? null,
-      recipesCount: 0,
-      followersCount: 0,
-      createdAt: user.createdAt.toISOString(),
+      recipesCount: user._count.recipes,
+      favoritesCount: user._count.favorites,
+      followersCount: user._count.followers,
+      followingCount: user._count.following,
     });
   } catch (error) {
-    logger.error({ error }, "Failed to fetch user profile");
+    logger.error({ error }, "Failed to fetch current user info");
 
     return res.status(500).json({
       error: "Internal server error",
@@ -44,278 +56,279 @@ export const getUserProfile = async (
   }
 };
 
-export const updateUserAvatar = async (
-  req: Request,
-  res: Response,
+export const getUserProfile = async (
+	req: Request<UserIdParams>,
+	res: Response,
 ) => {
-  try {
-    const userId = req.user?.sub;
+	try {
+		const { userId } = req.params;
 
-    if (!userId || typeof userId !== "string") {
-      return res.status(401).json({
-        error: "Authentication required",
-      });
-    }
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+		});
 
-    if (!req.file) {
-      return res.status(400).json({
-        error: "Avatar file is required",
-      });
-    }
+		if (!user) {
+			return res.status(404).json({
+				error: "User not found",
+			});
+		}
 
-    const avatarUrl = await uploadToCloudinary(
-      req.file.path,
-      "avatars",
-    );
+		logger.info({ userId: user.id, name: user.name }, "User profile fetched");
 
-    const user = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        avatar: avatarUrl,
-      },
-      select: {
-        id: true,
-        avatar: true,
-      },
-    });
+		return res.status(200).json({
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			avatar: user.avatar ?? null,
+			recipesCount: 0,
+			followersCount: 0,
+			createdAt: user.createdAt.toISOString(),
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to fetch user profile");
 
-    logger.info(
-      { userId: user.id },
-      "User avatar updated",
-    );
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
+};
 
-    return res.status(200).json({
-      avatar: user.avatar,
-    });
-  } catch (error) {
-    logger.error(
-      { error },
-      "Failed to update user avatar",
-    );
+export const updateUserAvatar = async (req: Request, res: Response) => {
+	try {
+		const userId = req.user?.sub;
 
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+		if (!userId || typeof userId !== "string") {
+			return res.status(401).json({
+				error: "Authentication required",
+			});
+		}
+
+		if (!req.file) {
+			return res.status(400).json({
+				error: "Avatar file is required",
+			});
+		}
+
+		const avatar = await uploadToCloudinary(req.file.path, "avatars");
+
+		const user = await prisma.user.update({
+			where: { id: userId },
+			data: {
+				avatar: avatar,
+			},
+			select: {
+				id: true,
+				avatar: true,
+			},
+		});
+
+		logger.info({ userId: user.id }, "User avatar updated");
+
+		return res.status(200).json({
+			avatar: user.avatar,
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to update user avatar");
+
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
 };
 
 export const getUserFollowers = async (
-  req: Request<UserIdParams>,
-  res: Response,
+	req: Request<UserIdParams>,
+	res: Response,
 ) => {
-  try {
-    const { userId } = req.params;
+	try {
+		const { userId } = req.params;
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			select: { id: true },
+		});
 
-    if (!user) {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
+		if (!user) {
+			return res.status(404).json({
+				error: "User not found",
+			});
+		}
 
-    const followers = await prisma.follow.findMany({
-      where: {
-        followingId: userId,
-      },
-      include: {
-        follower: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-      },
-    });
+		const followers = await prisma.follow.findMany({
+			where: {
+				followingId: userId,
+			},
+			include: {
+				follower: {
+					select: {
+						id: true,
+						name: true,
+						avatar: true,
+					},
+				},
+			},
+		});
 
-    return res.status(200).json({
-      followers: followers.map(({ follower }) => follower),
-    });
-  } catch (error) {
-    logger.error(
-      { error },
-      "Failed to fetch user followers",
-    );
+		return res.status(200).json({
+			followers: followers.map(({ follower }) => follower),
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to fetch user followers");
 
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
 };
 
-export const getUserFollowing = async (
-  req: Request,
-  res: Response,
-) => {
-  try {
-    const userId = req.user?.sub;
+export const getUserFollowing = async (req: Request, res: Response) => {
+	try {
+		const userId = req.user?.sub;
 
-    if (!userId || typeof userId !== "string") {
-      return res.status(401).json({
-        error: "Authentication required",
-      });
-    }
+		if (!userId || typeof userId !== "string") {
+			return res.status(401).json({
+				error: "Authentication required",
+			});
+		}
 
-    const following = await prisma.follow.findMany({
-      where: {
-        followerId: userId,
-      },
-      include: {
-        following: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
-        },
-      },
-    });
+		const following = await prisma.follow.findMany({
+			where: {
+				followerId: userId,
+			},
+			include: {
+				following: {
+					select: {
+						id: true,
+						name: true,
+						avatar: true,
+					},
+				},
+			},
+		});
 
-    return res.status(200).json({
-      following: following.map(({ following }) => following),
-    });
-  } catch (error) {
-    logger.error(
-      { error },
-      "Failed to fetch user following",
-    );
+		return res.status(200).json({
+			following: following.map(({ following }) => following),
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to fetch user following");
 
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
 };
 
-export const followUser = async (
-  req: Request<UserIdParams>,
-  res: Response,
-) => {
-  try {
-    const followerId = req.user?.sub;
-    const { userId: followingId } = req.params;
+export const followUser = async (req: Request<UserIdParams>, res: Response) => {
+	try {
+		const followerId = req.user?.sub;
+		const { userId: followingId } = req.params;
 
-    if (!followerId || typeof followerId !== "string") {
-      return res.status(401).json({
-        error: "Authentication required",
-      });
-    }
+		if (!followerId || typeof followerId !== "string") {
+			return res.status(401).json({
+				error: "Authentication required",
+			});
+		}
 
-    if (followerId === followingId) {
-      return res.status(400).json({
-        error: "You cannot follow yourself",
-      });
-    }
+		if (followerId === followingId) {
+			return res.status(400).json({
+				error: "You cannot follow yourself",
+			});
+		}
 
-    const user = await prisma.user.findUnique({
-      where: { id: followingId },
-      select: { id: true },
-    });
+		const user = await prisma.user.findUnique({
+			where: { id: followingId },
+			select: { id: true },
+		});
 
-    if (!user) {
-      return res.status(404).json({
-        error: "User not found",
-      });
-    }
+		if (!user) {
+			return res.status(404).json({
+				error: "User not found",
+			});
+		}
 
-    const existingFollow = await prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        },
-      },
-    });
+		const existingFollow = await prisma.follow.findUnique({
+			where: {
+				followerId_followingId: {
+					followerId,
+					followingId,
+				},
+			},
+		});
 
-    if (existingFollow) {
-      return res.status(409).json({
-        error: "Already following this user",
-      });
-    }
+		if (existingFollow) {
+			return res.status(409).json({
+				error: "Already following this user",
+			});
+		}
 
-    await prisma.follow.create({
-      data: {
-        followerId,
-        followingId,
-      },
-    });
+		await prisma.follow.create({
+			data: {
+				followerId,
+				followingId,
+			},
+		});
 
-    logger.info(
-      { followerId, followingId },
-      "User followed successfully",
-    );
+		logger.info({ followerId, followingId }, "User followed successfully");
 
-    return res.status(201).json({
-      message: "User followed successfully",
-    });
-  } catch (error) {
-    logger.error(
-      { error },
-      "Failed to follow user",
-    );
+		return res.status(201).json({
+			message: "User followed successfully",
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to follow user");
 
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
 };
 export const unfollowUser = async (
-  req: Request<UserIdParams>,
-  res: Response,
+	req: Request<UserIdParams>,
+	res: Response,
 ) => {
-  try {
-    const followerId = req.user?.sub;
-    const { userId: followingId } = req.params;
+	try {
+		const followerId = req.user?.sub;
+		const { userId: followingId } = req.params;
 
-    if (!followerId || typeof followerId !== "string") {
-      return res.status(401).json({
-        error: "Authentication required",
-      });
-    }
+		if (!followerId || typeof followerId !== "string") {
+			return res.status(401).json({
+				error: "Authentication required",
+			});
+		}
 
-    const existingFollow = await prisma.follow.findUnique({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        },
-      },
-    });
+		const existingFollow = await prisma.follow.findUnique({
+			where: {
+				followerId_followingId: {
+					followerId,
+					followingId,
+				},
+			},
+		});
 
-    if (!existingFollow) {
-      return res.status(404).json({
-        error: "You are not following this user",
-      });
-    }
+		if (!existingFollow) {
+			return res.status(404).json({
+				error: "You are not following this user",
+			});
+		}
 
-    await prisma.follow.delete({
-      where: {
-        followerId_followingId: {
-          followerId,
-          followingId,
-        },
-      },
-    });
+		await prisma.follow.delete({
+			where: {
+				followerId_followingId: {
+					followerId,
+					followingId,
+				},
+			},
+		});
 
-    logger.info(
-      { followerId, followingId },
-      "User unfollowed successfully",
-    );
+		logger.info({ followerId, followingId }, "User unfollowed successfully");
 
-    return res.status(200).json({
-      message: "User unfollowed successfully",
-    });
-  } catch (error) {
-    logger.error(
-      { error },
-      "Failed to unfollow user",
-    );
+		return res.status(200).json({
+			message: "User unfollowed successfully",
+		});
+	} catch (error) {
+		logger.error({ error }, "Failed to unfollow user");
 
-    return res.status(500).json({
-      error: "Internal server error",
-    });
-  }
+		return res.status(500).json({
+			error: "Internal server error",
+		});
+	}
 };
