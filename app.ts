@@ -60,6 +60,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
+app.use('/api/recipes', recipeRouter);
 
 app.use("/api/recipes", recipesRouter);
 

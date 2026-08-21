@@ -1,22 +1,33 @@
-import { z } from "zod";
-import { registry } from "../openapi.ts";
-import { PaginationQuerySchema } from "./common.validator.ts";
+import { z } from 'zod';
+import { registry } from '../openapi.ts';
+import { PaginationQuerySchema, IdParamsSchema } from './common.validator.ts';
 
 export const RecipesQuerySchema = PaginationQuerySchema.extend({
-  category: z.string().trim().optional(),
-  ingredient: z.string().trim().optional(),
-  area: z.string().trim().optional(),
+  category: z.string().trim().optional().openapi({
+    example: '6462a6cd4c3d0ddd28897f8a',
+    description: 'Category id to filter by',
+  }),
+  ingredient: z.string().trim().optional().openapi({
+    example: '640c2dd963a319ea671e37aa',
+    description: 'Ingredient id to filter by',
+  }),
+  area: z.string().trim().optional().openapi({
+    example: '6462a6f04c3d0ddd28897f9b',
+    description: 'Area id to filter by',
+  }),
 });
 export type RecipesQuery = z.infer<typeof RecipesQuerySchema>;
 
 export const PopularQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(20).default(4),
+  limit: z.coerce.number().int().min(1).max(20).default(4).openapi({ example: 4 }),
 });
 export type PopularQuery = z.infer<typeof PopularQuerySchema>;
 
 const IngredientInputSchema = z.object({
-  id: z.string().min(1, "ingredient id is required"),
-  measure: z.string().trim().min(1, "measure is required"),
+  id: z.string().min(1, 'ingredient id is required').openapi({
+    example: '640c2dd963a319ea671e37aa',
+  }),
+  measure: z.string().trim().min(1, 'measure is required').openapi({ example: '200g' }),
 });
 
 // multipart/form-data приходит как строки, поэтому ingredients ожидаем как
@@ -24,33 +35,25 @@ const IngredientInputSchema = z.object({
 export const CreateRecipeSchema = registry.register(
   "CreateRecipe",
   z.object({
-    title: z
-      .string()
-      .trim()
-      .min(1)
-      .max(200)
-      .openapi({ example: "Pork Cassoulet" }),
-    description: z.string().trim().min(10).max(500).optional().openapi({
-      example:
-        "A French-inspired stew made with pork, beans, and other ingredients. Delicious with crusty bread.",
+    title: z.string().trim().min(1).max(200).openapi({ example: 'Borscht' }),
+    description: z.string().trim().max(500).optional().openapi({
+      example: 'Classic Ukrainian beet soup',
     }),
-    instructions: z.string().trim().min(10).max(5000).openapi({
-      example:
-        "Heat oven to 140C/120C fan/gas 1. Put a large ovenproof pan (with a tight-fitting lid) on a high heat. Add your fat and diced meat, cook for a few mins to seal the edges, giving it a quick stir to cook evenly. Reduce the heat to low, add the sliced onion, whole garlic cloves, carrot and fennel seeds, and cook gently to soften the veg for a few mins.\r\nPour over the red wine vinegar, scraping any meaty bits off the bottom of the pan. Add the stock, tomato purée, and half the rosemary and parsley. Bring to the boil and simmer for 10 mins, then season, cover with a lid and put into the oven for 2 hrs, removing the lid for the final hour of cooking. Stir occasionally and add the beans with 30 mins to go.\r\nRemove the pan from the oven and heat the grill. Scatter the top with the remaining herbs and breadcrumbs, drizzle a little oil over the top, and return to the oven for 5-10 mins, until the breadcrumbs are golden. Serve with crusty bread and green veg.",
+    instructions: z.string().trim().min(1).openapi({
+      example: 'Boil beets, sauté vegetables, combine and simmer for 40 minutes.',
     }),
-    category: z
-      .string()
-      .min(1, "category id is required")
-      .openapi({ example: "6462a6cd4c3d0ddd28897f91" }),
-    area: z
-      .string()
-      .min(1, "area id is required")
-      .openapi({ example: "6462a6f04c3d0ddd28897fa3" }),
-    time: z.coerce
-      .number()
-      .int()
-      .min(1, "cooking time must be at least 1 minute")
-      .openapi({ example: 50 }),
+    category: z.string().min(1, 'category id is required').openapi({
+      example: '6462a6cd4c3d0ddd28897f8a',
+      description: 'Category id',
+    }),
+    area: z.string().min(1, 'area id is required').openapi({
+      example: '6462a6f04c3d0ddd28897f9b',
+      description: 'Area id',
+    }),
+    time: z.coerce.number().int().min(1, 'cooking time must be at least 1 minute').openapi({
+      example: 60,
+      description: 'Cooking time in minutes',
+    }),
     ingredients: z.preprocess(
       (val) => {
         if (typeof val === "string") {
@@ -62,309 +65,192 @@ export const CreateRecipeSchema = registry.register(
         }
         return val;
       },
-      z
-        .array(IngredientInputSchema)
-        .min(1, "at least one ingredient is required")
-        .openapi({
-          example: [
-            {
-              id: "640c2dd963a319ea671e37c6",
-              name: "Goose Fat",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e37c6.png",
-              measure: "4 tbsp",
-            },
-            {
-              id: "640c2dd963a319ea671e365e",
-              name: "Pork",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e365e.png",
-              measure: "350g",
-            },
-            {
-              id: "640c2dd963a319ea671e37ae",
-              name: "Onion",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e37ae.png",
-              measure: "1 large",
-            },
-            {
-              id: "640c2dd963a319ea671e36e3",
-              name: "Garlic",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e36e3.png",
-              measure: "10",
-            },
-            {
-              id: "640c2dd963a319ea671e3684",
-              name: "Carrots",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e3684.png",
-              measure: "1 thinly sliced",
-            },
-            {
-              id: "640c2dd963a319ea671e36d1",
-              name: "Fennel Seeds",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e36d1.png",
-              measure: "1 tsp ",
-            },
-            {
-              id: "640c2dd963a319ea671e37c9",
-              name: "Red Wine Vinegar",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e37c9.png",
-              measure: "2 tblsp ",
-            },
-            {
-              id: "640c2dd963a319ea671e378a",
-              name: "Vegetable Stock",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e378a.png",
-              measure: "600ml",
-            },
-            {
-              id: "640c2dd963a319ea671e377e",
-              name: "Tomato Puree",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e377e.png",
-              measure: "1 tblsp ",
-            },
-            {
-              id: "640c2dd963a319ea671e37cb",
-              name: "Rosemary",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e37cb.png",
-              measure: "2 sticks",
-            },
-            {
-              id: "640c2dd963a319ea671e3738",
-              name: "Parsley",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e3738.png",
-              measure: "Handful",
-            },
-            {
-              id: "640c2dd963a319ea671e37ca",
-              name: "Haricot Beans",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e37ca.png",
-              measure: "400g",
-            },
-            {
-              id: "640c2dd963a319ea671e3679",
-              name: "Breadcrumbs",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e3679.png",
-              measure: "2 tblsp ",
-            },
-            {
-              id: "640c2dd963a319ea671e372b",
-              name: "Oil",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e372b.png",
-              measure: "drizzle",
-            },
-            {
-              id: "640c2dd963a319ea671e3678",
-              name: "Bread",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e3678.png",
-              measure: "to serve",
-            },
-            {
-              id: "640c2dd963a319ea671e367a",
-              name: "Broccoli",
-              img: "https://ftp.goit.study/img/so-yummy/ingredients/640c2dd963a319ea671e367a.png",
-              measure: "to serve",
-            },
-          ],
-        }),
-    ),
+      z.array(IngredientInputSchema).min(1, 'at least one ingredient is required'),
+    ).openapi({
+      example: [
+        { id: '640c2dd963a319ea671e37aa', measure: '200g' },
+        { id: '640c2dd963a319ea671e37f5', measure: '1 head' },
+      ],
+      description:
+        'JSON-encoded string in multipart/form-data: \'[{"id":"...","measure":"..."}]\'',
+    }),
+    thumb: z.any().optional().openapi({
+      type: 'string',
+      format: 'binary',
+      description: 'Recipe photo (multipart file field)',
+    }),
   }),
 );
 export type CreateRecipeBody = z.infer<typeof CreateRecipeSchema>;
 
-// --- shared response building blocks ---
+// --- response shapes (for Swagger examples only) ---
 
-const CategoryRefSchema = z.object({
-  id: z.string().openapi({ example: "cat-borscht" }),
-  name: z.string().openapi({ example: "Soup" }),
-});
-
-const AreaRefSchema = z.object({
-  id: z.string().openapi({ example: "area-ukrainian" }),
-  name: z.string().openapi({ example: "Ukrainian" }),
-});
-
-const OwnerRefSchema = z.object({
-  id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
-  name: z.string().openapi({ example: "ivan_petrenko" }),
-  avatar: z.string().nullable().openapi({
-    example:
-      "https://res.cloudinary.com/dzxdn99qc/image/upload/v1786188885/avatars/nnzjc2gtqrawrmifzv4w.jpg",
-  }),
-});
-
-export const RecipeCardSchema = registry.register(
-  "RecipeCard",
+const CategoryRefSchema = registry.register(
+  'CategoryRef',
   z.object({
-    id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
-    title: z.string().openapi({ example: "Borscht" }),
-    description: z
-      .string()
-      .nullable()
-      .openapi({ example: "Traditional Ukrainian beet soup" }),
+    id: z.string().openapi({ example: '6462a6cd4c3d0ddd28897f8a' }),
+    name: z.string().openapi({ example: 'Soup' }),
+  }),
+);
+
+const AreaRefSchema = registry.register(
+  'AreaRef',
+  z.object({
+    id: z.string().openapi({ example: '6462a6f04c3d0ddd28897f9b' }),
+    name: z.string().openapi({ example: 'Ukrainian' }),
+  }),
+);
+
+const OwnerRefSchema = registry.register(
+  'OwnerRef',
+  z.object({
+    id: z.string().openapi({ example: '64c8d958249fae54bae90bb9' }),
+    name: z.string().openapi({ example: 'Vitalii' }),
+    avatar: z.string().nullable().openapi({ example: null }),
+  }),
+);
+
+const RecipeCardSchema = registry.register(
+  'RecipeCard',
+  z.object({
+    id: z.string().openapi({ example: 'a1b2c3d4-e5f6-4789-9abc-def012345678' }),
+    title: z.string().openapi({ example: 'Borscht' }),
+    description: z.string().nullable().openapi({ example: 'Classic Ukrainian beet soup' }),
     thumb: z.string().nullable().openapi({
-      example:
-        "https://res.cloudinary.com/dzxdn99qc/image/upload/v1/recipes/borscht.jpg",
+      example: 'https://res.cloudinary.com/demo/image/upload/foodies/recipes/borscht.jpg',
     }),
-    cookingTime: z.number().int().openapi({ example: 60 }),
+    cookingTime: z.number().openapi({ example: 60 }),
     category: CategoryRefSchema,
     area: AreaRefSchema,
     owner: OwnerRefSchema,
   }),
 );
 
-const paginatedResponse = (dataSchema: z.ZodTypeAny) =>
+const PaginatedRecipesSchema = registry.register(
+  'PaginatedRecipes',
   z.object({
-    page: z.number().int().openapi({ example: 1 }),
-    limit: z.number().int().openapi({ example: 12 }),
-    totalItems: z.number().int().openapi({ example: 42 }),
-    totalPages: z.number().int().openapi({ example: 4 }),
-    data: z.array(dataSchema),
-  });
-
-export const RecipeIngredientSchema = registry.register(
-  "RecipeIngredient",
-  z.object({
-    id: z.string().openapi({ example: "ing-beetroot" }),
-    name: z.string().openapi({ example: "Beetroot" }),
-    img: z.string().nullable().openapi({
-      example:
-        "https://res.cloudinary.com/dzxdn99qc/image/upload/v1/ingredients/beetroot.jpg",
-    }),
-    measure: z.string().openapi({ example: "2 pcs" }),
+    page: z.number().openapi({ example: 1 }),
+    limit: z.number().openapi({ example: 12 }),
+    totalItems: z.number().openapi({ example: 42 }),
+    totalPages: z.number().openapi({ example: 4 }),
+    data: z.array(RecipeCardSchema),
   }),
 );
 
-export const RecipeDetailSchema = registry.register(
-  "RecipeDetail",
+const RecipeIngredientRefSchema = registry.register(
+  'RecipeIngredientRef',
   z.object({
-    id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
-    title: z.string().openapi({ example: "Borscht" }),
-    description: z.string().nullable(),
-    instructions: z
-      .string()
-      .openapi({ example: "Boil the beets, chop the vegetables..." }),
-    thumb: z.string().nullable(),
-    preview: z.string().nullable(),
-    cookingTime: z.number().int().openapi({ example: 60 }),
+    id: z.string().openapi({ example: '640c2dd963a319ea671e37aa' }),
+    name: z.string().openapi({ example: 'Beet' }),
+    img: z.string().nullable().openapi({ example: 'https://example.com/beet.png' }),
+    measure: z.string().openapi({ example: '200g' }),
+  }),
+);
+
+const RecipeDetailSchema = registry.register(
+  'RecipeDetail',
+  z.object({
+    id: z.string().openapi({ example: 'a1b2c3d4-e5f6-4789-9abc-def012345678' }),
+    title: z.string().openapi({ example: 'Borscht' }),
+    description: z.string().nullable().openapi({ example: 'Classic Ukrainian beet soup' }),
+    instructions: z.string().openapi({
+      example: 'Boil beets, sauté vegetables, combine and simmer for 40 minutes.',
+    }),
+    thumb: z.string().nullable().openapi({
+      example: 'https://res.cloudinary.com/demo/image/upload/foodies/recipes/borscht.jpg',
+    }),
+    preview: z.string().nullable().openapi({ example: null }),
+    cookingTime: z.number().openapi({ example: 60 }),
     category: CategoryRefSchema,
     area: AreaRefSchema,
     owner: OwnerRefSchema,
-    ingredients: z.array(RecipeIngredientSchema),
+    ingredients: z.array(RecipeIngredientRefSchema),
   }),
 );
-
-export const PopularRecipeSchema = registry.register(
-  "PopularRecipe",
-  RecipeCardSchema.extend({
-    favoritesCount: z.number().int().openapi({ example: 128 }),
-  }),
-);
-
-const ErrorSchema = z.object({ error: z.string() });
 
 // --- paths ---
 
 registry.registerPath({
-  method: "get",
-  path: "/api/recipes",
-  tags: ["Recipes"],
-  summary: "Search recipes (filters + pagination)",
+  method: 'get',
+  path: '/api/recipes',
+  tags: ['Recipes'],
+  summary: 'Search recipes (filters + pagination)',
   request: { query: RecipesQuerySchema },
   responses: {
     200: {
-      description: "Paginated list of recipes",
-      content: {
-        "application/json": { schema: paginatedResponse(RecipeCardSchema) },
-      },
+      description: 'Paginated list of recipes',
+      content: { 'application/json': { schema: PaginatedRecipesSchema } },
     },
-    422: { description: "Validation error" },
   },
 });
 
 registry.registerPath({
-  method: "get",
-  path: "/api/recipes/popular",
-  tags: ["Recipes"],
-  summary: "Most favorited recipes",
+  method: 'get',
+  path: '/api/recipes/popular',
+  tags: ['Recipes'],
+  summary: 'Most favorited recipes',
   request: { query: PopularQuerySchema },
   responses: {
     200: {
-      description: "List of popular recipes, ordered by favorites count",
-      content: { "application/json": { schema: z.array(PopularRecipeSchema) } },
+      description: 'List of popular recipes',
+      content: { 'application/json': { schema: z.array(RecipeCardSchema) } },
     },
   },
 });
 
 registry.registerPath({
-  method: "get",
-  path: "/api/recipes/own",
-  tags: ["Recipes"],
-  summary: "Get the authenticated user's own recipes",
+  method: 'get',
+  path: '/api/recipes/own',
+  tags: ['Recipes'],
+  summary: "Get current authenticated user's own recipes",
   security: [{ bearerAuth: [] }],
   request: { query: PaginationQuerySchema },
   responses: {
     200: {
-      description: "Paginated list of the current user recipes",
-      content: {
-        "application/json": { schema: paginatedResponse(RecipeCardSchema) },
-      },
+      description: "Paginated list of the current user's recipes",
+      content: { 'application/json': { schema: PaginatedRecipesSchema } },
     },
-    401: {
-      description: "Authentication required",
-      content: { "application/json": { schema: ErrorSchema } },
-    },
+    401: { description: 'Authentication required' },
   },
 });
 
 registry.registerPath({
-  method: "get",
-  path: "/api/recipes/favorites",
-  tags: ["Recipes"],
-  summary: "Get the authenticated user's favorite recipes",
+  method: 'get',
+  path: '/api/recipes/favorites',
+  tags: ['Recipes'],
+  summary: "Get current authenticated user's favorite recipes",
   security: [{ bearerAuth: [] }],
   request: { query: PaginationQuerySchema },
   responses: {
     200: {
-      description: "Paginated list of favorite recipes",
-      content: {
-        "application/json": { schema: paginatedResponse(RecipeCardSchema) },
-      },
+      description: "Paginated list of the current user's favorite recipes",
+      content: { 'application/json': { schema: PaginatedRecipesSchema } },
     },
-    401: {
-      description: "Authentication required",
-      content: { "application/json": { schema: ErrorSchema } },
-    },
+    401: { description: 'Authentication required' },
   },
 });
 
 registry.registerPath({
-  method: "get",
-  path: "/api/recipes/{id}",
-  tags: ["Recipes"],
-  summary: "Get recipe details by id",
-  request: {
-    params: z.object({
-      id: z.string().openapi({ example: "6462a8f74c3d0ddd288980d2" }),
-    }),
-  },
+  method: 'get',
+  path: '/api/recipes/{id}',
+  tags: ['Recipes'],
+  summary: 'Get recipe details by id',
+  request: { params: IdParamsSchema },
   responses: {
     200: {
-      description: "Recipe details",
-      content: { "application/json": { schema: RecipeDetailSchema } },
+      description: 'Recipe details',
+      content: { 'application/json': { schema: RecipeDetailSchema } },
     },
-    404: {
-      description: "Recipe not found",
-      content: { "application/json": { schema: ErrorSchema } },
-    },
+    404: { description: 'Recipe not found' },
+
   },
 });
 
 registry.registerPath({
-  method: "post",
-  path: "/api/recipes",
-  tags: ["Recipes"],
-  summary: "Create a new recipe",
-  description:
-    'Multipart form data. `ingredients` must be sent as a JSON-encoded string, e.g. \'[{"id":"ing-beetroot","measure":"2 pcs"}]\'. `thumb` is an optional image file.',
+  method: 'post',
+  path: '/api/recipes',
+  tags: ['Recipes'],
+  summary: 'Create a new recipe',
   security: [{ bearerAuth: [] }],
   request: {
     body: {
@@ -449,10 +335,48 @@ registry.registerPath({
     }),
   },
   responses: {
-    204: { description: "Recipe removed from favorites (idempotent)" },
-    401: {
-      description: "Authentication required",
-      content: { "application/json": { schema: ErrorSchema } },
-    },
+    201: { description: 'Recipe created' },
+    400: { description: 'Unknown category/area/ingredient id' },
+    401: { description: 'Authentication required' },
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/recipes/{id}',
+  tags: ['Recipes'],
+  summary: 'Delete own recipe',
+  security: [{ bearerAuth: [] }],
+  request: { params: IdParamsSchema },
+  responses: {
+    204: { description: 'Recipe deleted' },
+    403: { description: 'You can only delete your own recipes' },
+    404: { description: 'Recipe not found' },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/recipes/{id}/favorite',
+  tags: ['Recipes'],
+  summary: 'Add a recipe to favorites',
+  security: [{ bearerAuth: [] }],
+  request: { params: IdParamsSchema },
+  responses: {
+    204: { description: 'Added to favorites' },
+    404: { description: 'Recipe not found' },
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/recipes/{id}/favorite',
+  tags: ['Recipes'],
+  summary: 'Remove a recipe from favorites',
+  security: [{ bearerAuth: [] }],
+  request: { params: IdParamsSchema },
+  responses: {
+    204: { description: 'Removed from favorites' },
+
   },
 });
