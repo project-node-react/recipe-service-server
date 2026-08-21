@@ -6,7 +6,7 @@ import { uploadToCloudinary } from "../services/cloudinary.ts";
 
 export const getCurrentUser = async (req: Request, res: Response) => {
 	try {
-		const userId = req.user!.sub as string;
+		const userId = req.user?.sub as string;
 
 		const user = await prisma.user.findUnique({
 			where: { id: userId },

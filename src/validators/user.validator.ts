@@ -37,9 +37,6 @@ export const UserProfileResponseSchema = registry.register(
 			example: 127,
 			description: "Number of followers the user has",
 		}),
-		createdAt: z.iso.datetime().openapi({
-			example: "2025-01-10T12:00:00.000Z",
-		}),
 	}),
 );
 
@@ -286,6 +283,84 @@ registry.registerPath({
 		},
 		404: {
 			description: "You are not following this user",
+		},
+	},
+});
+
+export const UpdateAvatarResponseSchema = registry.register(
+	"UpdateAvatarResponse",
+	z.object({
+		avatar: z.string().url().openapi({
+			example:
+				"https://res.cloudinary.com/dzxdn99qc/image/upload/v1786188885/avatars/nnzjc2gtqrawrmifzv4w.jpg",
+			description: "URL оновленого зображення профілю",
+		}),
+	}),
+);
+
+export type UpdateAvatarResponse = z.infer<typeof UpdateAvatarResponseSchema>;
+
+registry.registerPath({
+	method: "patch", // Або "put", залежно від вашого роутера
+	path: "/api/users/avatar",
+	tags: ["Users"],
+	summary: "Update user avatar",
+	description:
+		"Private endpoint. Uploads a new avatar image using multipart/form-data (field name: 'avatar') and updates Cloudinary URL.",
+	security: [{ bearerAuth: [] }],
+	request: {
+		body: {
+			content: {
+				"multipart/form-data": {
+					schema: z.object({
+						avatar: z.string().openapi({
+							type: "string",
+							format: "binary",
+							description: "Image file to upload (JPEG, PNG, WebP, etc.)",
+						}),
+					}),
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Avatar updated successfully",
+			content: {
+				"application/json": {
+					schema: UpdateAvatarResponseSchema,
+				},
+			},
+		},
+		400: {
+			description: "Bad Request — file missing or invalid format",
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string().openapi({ example: "Avatar file is required" }),
+					}),
+				},
+			},
+		},
+		401: {
+			description: "Authentication required or invalid token",
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string().openapi({ example: "Authentication required" }),
+					}),
+				},
+			},
+		},
+		500: {
+			description: "Internal server error during upload",
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string().openapi({ example: "Internal server error" }),
+					}),
+				},
+			},
 		},
 	},
 });
