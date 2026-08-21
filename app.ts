@@ -7,6 +7,7 @@ import { generateOpenApiDocument } from "./src/openapi.ts";
 
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";
+import recipeRouter from './src/routes/recipe.routes.ts';
 
 import cors from "cors";
 import helmet from "helmet";
@@ -54,6 +55,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
+app.use('/api/recipes', recipeRouter);
 
 // 404 Not Found handler - must be after all routes
 app.use((_req: Request, res: Response) => {
