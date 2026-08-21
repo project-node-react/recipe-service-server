@@ -8,6 +8,9 @@ import { generateOpenApiDocument } from "./src/openapi.ts";
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";
 
+import categoriesRoutes from "./src/routes/categories.routes.ts";
+import ingredientsRoutes from "./src/routes/ingredients.routes.ts";
+
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -55,6 +58,13 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
 
+// Add the categories routes
+app.use('/api/categories', categoriesRoutes);
+
+
+// ingredients routes
+app.use('/api/ingredients', ingredientsRoutes)
+
 // 404 Not Found handler - must be after all routes
 app.use((_req: Request, res: Response) => {
   res.status(404).json({ error: "Not found" });
@@ -91,5 +101,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
   res.status(500).json({ error: "Internal server error" });
 });
+
+
 
 export default app;
