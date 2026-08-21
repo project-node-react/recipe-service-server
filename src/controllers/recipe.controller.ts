@@ -109,7 +109,7 @@ export const getOwnRecipes = async (
 ) => {
   const { page, limit } = res.locals.query;
   const skip = (page - 1) * limit;
-  const where = { ownerId: req.user!.id };
+  const where = { ownerId: req.user!.sub! };
 
   const [totalItems, data] = await Promise.all([
     prisma.recipe.count({ where }),
@@ -173,7 +173,7 @@ export const deleteRecipe = async (req: Request<IdParams>, res: Response) => {
 
   const recipe = await prisma.recipe.findUnique({ where: { id } });
   if (!recipe) throw createHttpError(404, 'Recipe not found');
-  if (recipe.ownerId !== req.user!.id) {
+  if (recipe.ownerId !== req.user!.sub!) {
     throw createHttpError(403, 'You can only delete your own recipes');
   }
 
@@ -187,7 +187,7 @@ export const getFavoriteRecipes = async (
 ) => {
   const { page, limit } = res.locals.query;
   const skip = (page - 1) * limit;
-  const where = { userId: req.user!.id };
+  const where = { userId: req.user!.sub! };
 
   const [totalItems, rows] = await Promise.all([
     prisma.favorite.count({ where }),
@@ -217,9 +217,9 @@ export const addFavorite = async (req: Request<IdParams>, res: Response) => {
   if (!recipe) throw createHttpError(404, 'Recipe not found');
 
   await prisma.favorite.upsert({
-    where: { userId_recipeId: { userId: req.user!.id, recipeId } },
+    where: { userId_recipeId: { userId: req.user!.sub!, recipeId } },
     update: {},
-    create: { userId: req.user!.id, recipeId },
+    create: { userId: req.user!.sub!, recipeId },
   });
 
   res.status(204).send();
@@ -229,7 +229,7 @@ export const removeFavorite = async (req: Request<IdParams>, res: Response) => {
   const { id: recipeId } = req.params;
 
   await prisma.favorite
-    .delete({ where: { userId_recipeId: { userId: req.user!.id, recipeId } } })
+    .delete({ where: { userId_recipeId: { userId: req.user!.sub!, recipeId } } })
     .catch(() => null);
 
   res.status(204).send();
