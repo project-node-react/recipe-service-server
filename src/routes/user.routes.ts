@@ -1,11 +1,12 @@
 import { Router } from "express";
+import { getCurrentUser } from "../controllers/user.controller.ts";
 import {
-	getUserProfile,
-	updateUserAvatar,
-	getUserFollowers,
-	getUserFollowing,
-	followUser,
-	unfollowUser,
+  getUserProfile,
+  updateUserAvatar,
+  getUserFollowers,
+  getUserFollowing,
+  followUser,
+  unfollowUser,
 } from "../controllers/user.controller.ts";
 import { UserIdParamsSchema } from "../validators/user.validator.ts";
 import { validateParams } from "../middleware/validate.ts";
@@ -15,40 +16,42 @@ import { upload } from "../middleware/upload.ts";
 const router = Router();
 
 router.get(
-	"/:userId/followers",
-	authenticate,
-	validateParams(UserIdParamsSchema),
-	getUserFollowers,
+  "/:userId/followers",
+  authenticate,
+  validateParams(UserIdParamsSchema),
+  getUserFollowers,
 );
 
 router.delete(
-	"/:userId/follow",
-	authenticate,
-	validateParams(UserIdParamsSchema),
-	unfollowUser,
+  "/:userId/follow",
+  authenticate,
+  validateParams(UserIdParamsSchema),
+  unfollowUser,
 );
 
 router.get("/following", authenticate, getUserFollowing);
 
 router.post(
-	"/:userId/follow",
-	authenticate,
-	validateParams(UserIdParamsSchema),
-	followUser,
+  "/:userId/follow",
+  authenticate,
+  validateParams(UserIdParamsSchema),
+  followUser,
 );
 
+router.get("/current", authenticate, getCurrentUser);
+
 router.get(
-	"/:userId",
-	authenticate,
-	validateParams(UserIdParamsSchema),
-	getUserProfile,
+  "/:userId",
+  authenticate,
+  validateParams(UserIdParamsSchema),
+  getUserProfile,
 );
 
 router.patch(
-	"/avatar",
-	authenticate,
-	upload.single("avatar"),
-	updateUserAvatar,
+  "/avatar",
+  authenticate,
+  upload.single("avatar"),
+  updateUserAvatar,
 );
 
 export default router;
