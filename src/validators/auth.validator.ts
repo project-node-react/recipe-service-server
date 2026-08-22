@@ -110,7 +110,18 @@ registry.registerPath({
   path: "/api/auth/logout",
   tags: ["Auth"],
   summary: "Logout user",
+  security: [{ bearerAuth: [] }],
   responses: {
     204: { description: "Logged out successfully" },
+    401: {
+      description: "Authentication required or invalid token",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+          }),
+        },
+      },
+    },
   },
 });
