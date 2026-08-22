@@ -1,5 +1,7 @@
 import { Router } from 'express';
 
+import '../openapiParts/area.openapi.ts';
+
 import {
   getAllAreasController,
   getAreaByIdController,
