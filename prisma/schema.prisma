@@ -44,7 +44,7 @@ model RefreshToken {
 }
 
 model Category {
-  id      String   @id
+  id      String   @id @default(cuid(2))
   name    String   @unique
   recipes Recipe[]
 
@@ -52,7 +52,7 @@ model Category {
 }
 
 model Area {
-  id      String   @id
+  id      String   @id @default(cuid(2))
   name    String   @unique
   recipes Recipe[]
 
@@ -60,7 +60,7 @@ model Area {
 }
 
 model Ingredient {
-  id          String @id
+  id          String @id @default(cuid(2))
   name        String
   description String?
   img         String?
@@ -71,7 +71,7 @@ model Ingredient {
 }
 
 model Recipe {
-  id           String   @id @default(uuid())
+  id           String   @id @default(cuid(2))
   title        String
   description  String?
   instructions String
@@ -134,7 +134,7 @@ model Follow {
 }
 
 model Testimonial {
-  id          String @id
+  id          String  @id @default(cuid(2))
   ownerId     String
   testimonial String
 

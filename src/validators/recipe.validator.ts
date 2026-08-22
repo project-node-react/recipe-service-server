@@ -132,7 +132,7 @@ const OwnerRefSchema = registry.register(
 const RecipeCardSchema = registry.register(
   "RecipeCard",
   z.object({
-    id: z.string().openapi({ example: "a1b2c3d4-e5f6-4789-9abc-def012345678" }),
+    id: z.string().openapi({ example: "fvi5suwbxvn976xeyg4blrs3" }),
     title: z.string().openapi({ example: "Borscht" }),
     description: z
       .string()
@@ -176,7 +176,7 @@ const RecipeIngredientRefSchema = registry.register(
 const RecipeDetailSchema = registry.register(
   "RecipeDetail",
   z.object({
-    id: z.string().openapi({ example: "a1b2c3d4-e5f6-4789-9abc-def012345678" }),
+    id: z.string().openapi({ example: "afvi5suwbxvn976xeyg4blrs3" }),
     title: z.string().openapi({ example: "Borscht" }),
     description: z
       .string()
@@ -332,7 +332,7 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({
-      id: z.string().openapi({ example: "64c8d958249fae54bae90bb9" }),
+      id: z.string().openapi({ example: "fvi5suwbxvn976xeyg4blrs3" }),
     }),
   },
   responses: {
