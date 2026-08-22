@@ -10,7 +10,7 @@ import areasRoutes from "./src/routes/area.routes.ts";
 import testimonialRoutes from "./src/routes/testimonial.routes.ts";
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";
-// import recipesRouter from "./src/routes/recipe.routes.ts";
+import recipesRouter from "./src/routes/recipe.routes.ts";
 import categoriesRoutes from "./src/routes/categories.routes.ts";
 import ingredientsRoutes from "./src/routes/ingredients.routes.ts";
 
@@ -60,7 +60,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
-// app.use("/api/recipes", recipesRouter);
+app.use("/api/recipes", recipesRouter);
 
 app.use("/api/areas", areasRoutes);
 
