@@ -149,6 +149,17 @@ export const getOwnRecipes = async (
 
 export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: Response) => {
   const { title, description, instructions, category, area, time, ingredients } = req.body;
+  const ownerId = req.user!.sub!;
+
+  const existingRecipe = await prisma.recipe.findFirst({
+    where: {
+      ownerId,
+      title: { equals: title.trim(), mode: 'insensitive' },
+    },
+  });
+  if (existingRecipe) {
+    return res.status(409).json({ message: 'Recipe with this title already exists' });
+  }
 
   const [categoryExists, areaExists] = await Promise.all([
     prisma.category.findUnique({ where: { id: category } }),
@@ -177,7 +188,7 @@ export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: 
       cookingTime: time,
       categoryId: category,
       areaId: area,
-      ownerId: req.user!.sub!,
+      ownerId,
       ingredients: { create: ingredients.map((i) => ({ ingredientId: i.id, measure: i.measure })) },
     },
     include: {
@@ -200,7 +211,7 @@ export const deleteRecipe = async (req: Request<IdParams>, res: Response) => {
   }
 
 	await prisma.recipe.delete({ where: { id } });
-	res.status(204).send();
+	res.status(200).json({ message: "Recipe deleted successfully" });
 };
 
 export const getFavoriteRecipes = async (
@@ -235,17 +246,21 @@ export const getFavoriteRecipes = async (
 
 export const addFavorite = async (req: Request<IdParams>, res: Response) => {
 	const { id: recipeId } = req.params;
+	const userId = req.user!.sub!;
 
 	const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
 	if (!recipe) throw createHttpError(404, "Recipe not found");
 
-  await prisma.favorite.upsert({
-    where: { userId_recipeId: { userId: req.user!.sub!, recipeId } },
-    update: {},
-    create: { userId: req.user!.sub!, recipeId },
+  const favorite = await prisma.favorite.findUnique({
+    where: { userId_recipeId: { userId, recipeId } },
   });
+  if (favorite) {
+    return res.status(409).json({ message: "Recipe is already in favorites" });
+  }
 
-	res.status(204).send();
+  await prisma.favorite.create({ data: { userId, recipeId } });
+
+	res.status(200).json({ message: "Recipe added to favorites successfully" });
 };
 
 export const removeFavorite = async (req: Request<IdParams>, res: Response) => {
@@ -255,5 +270,5 @@ export const removeFavorite = async (req: Request<IdParams>, res: Response) => {
     .delete({ where: { userId_recipeId: { userId: req.user!.sub!, recipeId } } })
     .catch(() => null);
 
-	res.status(204).send();
+	res.status(200).json({ message: "Recipe removed from favorites successfully" });
 };

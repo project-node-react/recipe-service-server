@@ -295,6 +295,18 @@ registry.registerPath({
     401: {
       description: "Authentication required",
     },
+    409: {
+      description: "Recipe with this title already exists",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe with this title already exists",
+            }),
+          }),
+        },
+      },
+    },
     422: { description: "Validation error" },
   },
 });
@@ -311,7 +323,18 @@ registry.registerPath({
     }),
   },
   responses: {
-    204: { description: "Recipe deleted" },
+    200: {
+      description: "Recipe deleted successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe deleted successfully",
+            }),
+          }),
+        },
+      },
+    },
     401: {
       description: "Authentication required",
     },
@@ -336,7 +359,30 @@ registry.registerPath({
     }),
   },
   responses: {
-    204: { description: "Recipe added to favorites (idempotent)" },
+    200: {
+      description: "Recipe added to favorites successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe added to favorites successfully",
+            }),
+          }),
+        },
+      },
+    },
+    409: {
+      description: "Recipe is already in favorites",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe is already in favorites",
+            }),
+          }),
+        },
+      },
+    },
     401: {
       description: "Authentication required",
     },
@@ -358,7 +404,18 @@ registry.registerPath({
     }),
   },
   responses: {
-    201: { description: "Recipe created" },
+    200: {
+      description: "Recipe removed from favorites successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe removed from favorites successfully",
+            }),
+          }),
+        },
+      },
+    },
     400: { description: "Unknown category/area/ingredient id" },
     401: { description: "Authentication required" },
   },
@@ -372,7 +429,18 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: { params: IdParamsSchema },
   responses: {
-    204: { description: "Recipe deleted" },
+    200: {
+      description: "Recipe deleted successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe deleted successfully",
+            }),
+          }),
+        },
+      },
+    },
     403: { description: "You can only delete your own recipes" },
     404: { description: "Recipe not found" },
   },
@@ -386,7 +454,30 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: { params: IdParamsSchema },
   responses: {
-    204: { description: "Added to favorites" },
+    200: {
+      description: "Recipe added to favorites successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe added to favorites successfully",
+            }),
+          }),
+        },
+      },
+    },
+    409: {
+      description: "Recipe is already in favorites",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe is already in favorites",
+            }),
+          }),
+        },
+      },
+    },
     404: { description: "Recipe not found" },
   },
 });
@@ -399,6 +490,17 @@ registry.registerPath({
   security: [{ bearerAuth: [] }],
   request: { params: IdParamsSchema },
   responses: {
-    204: { description: "Removed from favorites" },
+    200: {
+      description: "Recipe removed from favorites successfully",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z.string().openapi({
+              example: "Recipe removed from favorites successfully",
+            }),
+          }),
+        },
+      },
+    },
   },
 });
