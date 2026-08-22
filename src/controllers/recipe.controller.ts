@@ -1,14 +1,14 @@
-import createHttpError from 'http-errors';
-import type { Request, Response } from 'express';
-import prisma from '../../prisma/client.ts';
-import { uploadToCloudinary } from '../services/cloudinary.ts';
-import type { IdParams } from '../validators/common.validator.ts';
+import createHttpError from "http-errors";
+import type { Request, Response } from "express";
+import prisma from "../../prisma/client.ts";
+import { uploadToCloudinary } from "../services/cloudinary.ts";
+import type { IdParams } from "../validators/common.validator.ts";
 import type {
-  RecipesQuery,
-  PopularQuery,
-  CreateRecipeBody,
-} from '../validators/recipe.validator.ts';
-import type { PaginationQuery } from '../validators/common.validator.ts';
+	RecipesQuery,
+	PopularQuery,
+	CreateRecipeBody,
+} from "../validators/recipe.validator.ts";
+import type { PaginationQuery } from "../validators/common.validator.ts";
 
 const cardSelect = {
   id: true,
@@ -18,52 +18,74 @@ const cardSelect = {
   cookingTime: true,
   category: { select: { id: true, name: true } },
   area: { select: { id: true, name: true } },
-  owner: { select: { id: true, name: true, avatarURL: true } },
+  owner: { select: { id: true, name: true, avatar: true } },
 } as const;
 
-function buildPagination(page: number, limit: number, totalItems: number, data: unknown[]) {
-  return { page, limit, totalItems, totalPages: Math.max(1, Math.ceil(totalItems / limit)), data };
+function buildPagination(
+	page: number,
+	limit: number,
+	totalItems: number,
+	data: unknown[],
+) {
+	return {
+		page,
+		limit,
+		totalItems,
+		totalPages: Math.max(1, Math.ceil(totalItems / limit)),
+		data,
+	};
 }
 
-export const getRecipes = async (req: Request, res: Response<any, { query: RecipesQuery }>) => {
-  const { category, ingredient, area, page, limit } = res.locals.query;
-  const skip = (page - 1) * limit;
+export const getRecipes = async (
+	req: Request,
+	res: Response<any, { query: RecipesQuery }>,
+) => {
+	const { category, ingredient, area, page, limit } = res.locals.query;
+	const skip = (page - 1) * limit;
 
-  const where = {
-    ...(category ? { categoryId: category } : {}),
-    ...(area ? { areaId: area } : {}),
-    ...(ingredient ? { ingredients: { some: { ingredientId: ingredient } } } : {}),
-  };
+	const where = {
+		...(category ? { categoryId: category } : {}),
+		...(area ? { areaId: area } : {}),
+		...(ingredient
+			? { ingredients: { some: { ingredientId: ingredient } } }
+			: {}),
+	};
 
-  const [totalItems, data] = await Promise.all([
-    prisma.recipe.count({ where }),
-    prisma.recipe.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      select: cardSelect,
-    }),
-  ]);
+	const [totalItems, data] = await Promise.all([
+		prisma.recipe.count({ where }),
+		prisma.recipe.findMany({
+			where,
+			skip,
+			take: limit,
+			orderBy: { createdAt: "desc" },
+			select: cardSelect,
+		}),
+	]);
 
-  res.status(200).json(buildPagination(page, limit, totalItems, data));
+	res.status(200).json(buildPagination(page, limit, totalItems, data));
 };
 
 export const getPopularRecipes = async (
-  req: Request,
-  res: Response<any, { query: PopularQuery }>,
+	req: Request,
+	res: Response<any, { query: PopularQuery }>,
 ) => {
-  const { limit } = res.locals.query;
+	const { limit } = res.locals.query;
 
-  const recipes = await prisma.recipe.findMany({
-    take: limit,
-    orderBy: { favoritedBy: { _count: 'desc' } },
-    select: { ...cardSelect, _count: { select: { favoritedBy: true } } },
-  });
+	const recipes = await prisma.recipe.findMany({
+		take: limit,
+		orderBy: { favoritedBy: { _count: "desc" } },
+		select: { ...cardSelect, _count: { select: { favoritedBy: true } } },
+	});
 
-  res
-    .status(200)
-    .json(recipes.map((r) => ({ ...r, favoritesCount: r._count.favoritedBy, _count: undefined })));
+	res
+		.status(200)
+		.json(
+			recipes.map((r) => ({
+				...r,
+				favoritesCount: r._count.favoritedBy,
+				_count: undefined,
+			})),
+		);
 };
 
 export const getRecipeById = async (req: Request<IdParams>, res: Response) => {
@@ -74,7 +96,7 @@ export const getRecipeById = async (req: Request<IdParams>, res: Response) => {
     include: {
       category: { select: { id: true, name: true } },
       area: { select: { id: true, name: true } },
-      owner: { select: { id: true, name: true, avatarURL: true } },
+      owner: { select: { id: true, name: true, avatar: true } },
       ingredients: {
         select: { measure: true, ingredient: { select: { id: true, name: true, img: true } } },
       },
@@ -104,12 +126,12 @@ export const getRecipeById = async (req: Request<IdParams>, res: Response) => {
 };
 
 export const getOwnRecipes = async (
-  req: Request,
-  res: Response<any, { query: PaginationQuery }>,
+	req: Request,
+	res: Response<any, { query: PaginationQuery }>,
 ) => {
   const { page, limit } = res.locals.query;
   const skip = (page - 1) * limit;
-  const where = { ownerId: req.user!.id };
+  const where = { ownerId: req.user!.sub! };
 
   const [totalItems, data] = await Promise.all([
     prisma.recipe.count({ where }),
@@ -155,7 +177,7 @@ export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: 
       cookingTime: time,
       categoryId: category,
       areaId: area,
-      ownerId: req.user!.id,
+      ownerId: req.user!.sub!,
       ingredients: { create: ingredients.map((i) => ({ ingredientId: i.id, measure: i.measure })) },
     },
     include: {
@@ -169,25 +191,26 @@ export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: 
 };
 
 export const deleteRecipe = async (req: Request<IdParams>, res: Response) => {
-  const { id } = req.params;
+	const { id } = req.params;
 
   const recipe = await prisma.recipe.findUnique({ where: { id } });
   if (!recipe) throw createHttpError(404, 'Recipe not found');
-  if (recipe.ownerId !== req.user!.id) {
+  if (recipe.ownerId !== req.user!.sub!) {
     throw createHttpError(403, 'You can only delete your own recipes');
   }
 
-  await prisma.recipe.delete({ where: { id } });
-  res.status(204).send();
+	await prisma.recipe.delete({ where: { id } });
+	res.status(204).send();
 };
 
 export const getFavoriteRecipes = async (
-  req: Request,
-  res: Response<any, { query: PaginationQuery }>,
+	req: Request,
+	res: Response<any, { query: PaginationQuery }>,
 ) => {
+
   const { page, limit } = res.locals.query;
   const skip = (page - 1) * limit;
-  const where = { userId: req.user!.id };
+  const where = { userId: req.user!.sub! };
 
   const [totalItems, rows] = await Promise.all([
     prisma.favorite.count({ where }),
@@ -211,26 +234,26 @@ export const getFavoriteRecipes = async (
 };
 
 export const addFavorite = async (req: Request<IdParams>, res: Response) => {
-  const { id: recipeId } = req.params;
+	const { id: recipeId } = req.params;
 
-  const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
-  if (!recipe) throw createHttpError(404, 'Recipe not found');
+	const recipe = await prisma.recipe.findUnique({ where: { id: recipeId } });
+	if (!recipe) throw createHttpError(404, "Recipe not found");
 
   await prisma.favorite.upsert({
-    where: { userId_recipeId: { userId: req.user!.id, recipeId } },
+    where: { userId_recipeId: { userId: req.user!.sub!, recipeId } },
     update: {},
-    create: { userId: req.user!.id, recipeId },
+    create: { userId: req.user!.sub!, recipeId },
   });
 
-  res.status(204).send();
+	res.status(204).send();
 };
 
 export const removeFavorite = async (req: Request<IdParams>, res: Response) => {
-  const { id: recipeId } = req.params;
+	const { id: recipeId } = req.params;
 
   await prisma.favorite
-    .delete({ where: { userId_recipeId: { userId: req.user!.id, recipeId } } })
+    .delete({ where: { userId_recipeId: { userId: req.user!.sub!, recipeId } } })
     .catch(() => null);
 
-  res.status(204).send();
+	res.status(204).send();
 };

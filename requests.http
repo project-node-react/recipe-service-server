@@ -1,0 +1,20 @@
+### 1 Отримання списку категорій
+GET http://localhost:3000/api/categories
+
+
+### 2 Отримання списку інгредієнтів
+GET http://localhost:3000/api/ingredients
+
+
+### 3 Get all areas
+GET http://localhost:3000/api/areas
+
+### 4 Get area by ID
+GET http://localhost:3000/api/areas/6462a6f04c3d0ddd28897fb4
+
+### 5 Get non-existing area
+GET http://localhost:3000/api/areas/not-existing-id
+
+
+### 6 Get all testimonials
+GET http://localhost:3000/api/testimonials
