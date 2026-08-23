@@ -149,7 +149,7 @@ const RecipeCardSchema = registry.register(
   }),
 );
 
-const PaginatedRecipesSchema = registry.register(
+export const PaginatedRecipesSchema = registry.register(
   "PaginatedRecipes",
   z.object({
     page: z.number().openapi({ example: 1 }),
