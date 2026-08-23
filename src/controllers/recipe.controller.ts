@@ -9,6 +9,7 @@ import type {
 	CreateRecipeBody,
 } from "../validators/recipe.validator.ts";
 import type { PaginationQuery } from "../validators/common.validator.ts";
+import type { UserIdParams } from "../validators/user.validator.ts";
 
 const cardSelect = {
   id: true,
@@ -145,6 +146,36 @@ export const getOwnRecipes = async (
   ]);
 
   res.status(200).json(buildPagination(page, limit, totalItems, data));
+};
+
+export const getUserRecipes = async (
+	req: Request<UserIdParams>,
+	res: Response<any, { query: PaginationQuery }>,
+) => {
+	const { userId } = req.params;
+	const { page, limit } = res.locals.query;
+
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { id: true },
+	});
+	if (!user) throw createHttpError(404, "User not found");
+
+	const skip = (page - 1) * limit;
+	const where = { ownerId: userId };
+
+	const [totalItems, data] = await Promise.all([
+		prisma.recipe.count({ where }),
+		prisma.recipe.findMany({
+			where,
+			skip,
+			take: limit,
+			orderBy: { createdAt: "desc" },
+			select: cardSelect,
+		}),
+	]);
+
+	res.status(200).json(buildPagination(page, limit, totalItems, data));
 };
 
 export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: Response) => {

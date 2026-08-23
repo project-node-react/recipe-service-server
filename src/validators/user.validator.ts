@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { registry } from "../openapi.ts";
+import { PaginationQuerySchema } from "./common.validator.ts";
+import { PaginatedRecipesSchema } from "./recipe.validator.ts";
 
 export const UserIdParamsSchema = registry.register(
 	"UserIdParams",
@@ -134,6 +136,53 @@ registry.registerPath({
 				"application/json": {
 					schema: z.object({
 						error: z.string(),
+					}),
+				},
+			},
+		},
+	},
+});
+
+registry.registerPath({
+	method: "get",
+	path: "/api/users/{userId}/recipes",
+	tags: ["Users"],
+	summary: "Get recipes created by a user",
+	description:
+		"Private endpoint. Returns a paginated list of recipes owned by the specified user.",
+	security: [{ bearerAuth: [] }],
+	request: {
+		params: UserIdParamsSchema,
+		query: PaginationQuerySchema,
+	},
+	responses: {
+		200: {
+			description: "Paginated list of the user's recipes",
+			content: {
+				"application/json": {
+					schema: PaginatedRecipesSchema,
+				},
+			},
+		},
+		400: {
+			description: "Invalid user ID or pagination parameters",
+		},
+		401: {
+			description: "Authentication required or invalid token",
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string(),
+					}),
+				},
+			},
+		},
+		404: {
+			description: "User not found",
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string().openapi({ example: "User not found" }),
 					}),
 				},
 			},
