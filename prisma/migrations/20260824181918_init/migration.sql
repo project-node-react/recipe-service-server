@@ -26,6 +26,7 @@ CREATE TABLE "refresh_tokens" (
 CREATE TABLE "categories" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "img" TEXT,
 
     CONSTRAINT "categories_pkey" PRIMARY KEY ("id")
 );
