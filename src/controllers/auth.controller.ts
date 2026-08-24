@@ -39,7 +39,6 @@ export const register = async (
 
   res.status(201).json({
     accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
     user: {
       id: user.id,
       name: user.name,
@@ -72,7 +71,6 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
   res.status(200).json({
     accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
     user: {
       id: user.id,
       name: user.name,
@@ -110,7 +108,6 @@ export const refresh = async (req: Request, res: Response) => {
 
   res.status(200).json({
     accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
   });
 };
 

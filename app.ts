@@ -4,10 +4,15 @@ import swaggerUi from "swagger-ui-express";
 import cookieParser from "cookie-parser";
 
 import { generateOpenApiDocument } from "./src/openapi.ts";
-
+import "./src/validators/area.validator.ts";
+import "./src/validators/testimonial.validator.ts";
+import areasRoutes from "./src/routes/area.routes.ts";
+import testimonialRoutes from "./src/routes/testimonial.routes.ts";
 import authRouter from "./src/routes/auth.routes.ts";
 import userRouter from "./src/routes/user.routes.ts";
-import recipeRouter from './src/routes/recipe.routes.ts';
+import recipesRouter from "./src/routes/recipe.routes.ts";
+import categoriesRoutes from "./src/routes/categories.routes.ts";
+import ingredientsRoutes from "./src/routes/ingredients.routes.ts";
 
 import cors from "cors";
 import helmet from "helmet";
@@ -55,7 +60,16 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
-app.use('/api/recipes', recipeRouter);
+app.use("/api/recipes", recipesRouter);
+
+app.use("/api/areas", areasRoutes);
+
+app.use("/api/testimonials", testimonialRoutes);
+// Add the categories routes
+app.use("/api/categories", categoriesRoutes);
+
+// ingredients routes
+app.use("/api/ingredients", ingredientsRoutes);
 
 // 404 Not Found handler - must be after all routes
 app.use((_req: Request, res: Response) => {
