@@ -12,6 +12,7 @@ const DATA_DIR = path.join(__dirname, "seed-data");
 interface CategoryRow {
   id: string;
   name: string;
+  img?: string;
 }
 
 interface AreaRow {
@@ -78,8 +79,8 @@ async function seedCategories(): Promise<void> {
   for (const row of rows) {
     await prisma.category.upsert({
       where: { id: row.id },
-      update: { name: row.name },
-      create: { id: row.id, name: row.name },
+      update: { name: row.name, img: row.img || null },
+      create: { id: row.id, name: row.name, img: row.img || null },
     });
   }
   console.log(`✔ categories: ${rows.length}`);

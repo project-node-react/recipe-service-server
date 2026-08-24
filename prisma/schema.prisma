@@ -46,6 +46,7 @@ model RefreshToken {
 model Category {
   id      String   @id @default(cuid(2))
   name    String   @unique
+  img     String?
   recipes Recipe[]
 
   @@map("categories")

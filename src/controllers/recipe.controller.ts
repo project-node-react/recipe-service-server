@@ -17,7 +17,7 @@ const cardSelect = {
   description: true,
   thumb: true,
   cookingTime: true,
-  category: { select: { id: true, name: true } },
+  category: { select: { id: true, name: true, img: true } },
   area: { select: { id: true, name: true } },
   owner: { select: { id: true, name: true, avatar: true } },
 } as const;
@@ -95,7 +95,7 @@ export const getRecipeById = async (req: Request<IdParams>, res: Response) => {
   const recipe = await prisma.recipe.findUnique({
     where: { id },
     include: {
-      category: { select: { id: true, name: true } },
+      category: { select: { id: true, name: true, img: true } },
       area: { select: { id: true, name: true } },
       owner: { select: { id: true, name: true, avatar: true } },
       ingredients: {
@@ -223,7 +223,7 @@ export const createRecipe = async (req: Request<{}, {}, CreateRecipeBody>, res: 
       ingredients: { create: ingredients.map((i) => ({ ingredientId: i.id, measure: i.measure })) },
     },
     include: {
-      category: { select: { id: true, name: true } },
+      category: { select: { id: true, name: true, img: true } },
       area: { select: { id: true, name: true } },
       ingredients: { include: { ingredient: true } },
     },
