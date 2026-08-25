@@ -13,6 +13,7 @@ import userRouter from "./src/routes/user.routes.ts";
 import recipesRouter from "./src/routes/recipe.routes.ts";
 import categoriesRoutes from "./src/routes/categories.routes.ts";
 import ingredientsRoutes from "./src/routes/ingredients.routes.ts";
+import rootRouter from "./src/routes/root.routes.ts";
 
 import cors from "cors";
 import helmet from "helmet";
@@ -63,15 +64,13 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/recipes", recipesRouter);
-
 app.use("/api/areas", areasRoutes);
-
 app.use("/api/testimonials", testimonialRoutes);
-// Add the categories routes
 app.use("/api/categories", categoriesRoutes);
-
-// ingredients routes
 app.use("/api/ingredients", ingredientsRoutes);
+
+// Root route (Redirects to /api-docs or returns JSON)
+app.use("/", rootRouter);
 
 // 404 Not Found handler - must be after all routes
 app.use((_req: Request, res: Response) => {
