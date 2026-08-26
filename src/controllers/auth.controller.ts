@@ -116,9 +116,15 @@ export const logout = async (req: Request, res: Response) => {
 		req.cookies?.refreshToken ||
 		(req.body as { refreshToken?: string })?.refreshToken;
 
+	const userId = (req as any).user?.id;
+
 	if (refreshToken) {
 		await prisma.refreshToken.deleteMany({
 			where: { token: refreshToken },
+		});
+	} else if (userId) {
+		await prisma.refreshToken.deleteMany({
+			where: { userId },
 		});
 	}
 
