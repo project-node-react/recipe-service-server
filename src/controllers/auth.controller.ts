@@ -81,8 +81,8 @@ export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
 
 export const refresh = async (req: Request, res: Response) => {
 	const refreshToken =
-		req.cookies.refreshToken ||
-		(req.body as { refreshToken?: string }).refreshToken;
+		req.cookies?.refreshToken ||
+		(req.body as { refreshToken?: string })?.refreshToken;
 
 	if (!refreshToken) {
 		throw createHttpError(401, "Refresh token not provided");
@@ -96,12 +96,13 @@ export const refresh = async (req: Request, res: Response) => {
 		throw createHttpError(401, "Invalid refresh token");
 	}
 
+	await prisma.refreshToken.deleteMany({
+		where: { id: storedToken.id },
+	});
+
 	if (new Date() > storedToken.expiresAt) {
-		await prisma.refreshToken.delete({ where: { id: storedToken.id } });
 		throw createHttpError(401, "Refresh token expired");
 	}
-
-	await prisma.refreshToken.delete({ where: { id: storedToken.id } });
 
 	const tokens = await createTokens(storedToken.userId);
 	setRefreshTokenCookie(res, tokens.refreshToken);
